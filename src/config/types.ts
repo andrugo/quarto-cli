@@ -137,6 +137,7 @@ import {
   kPdfEngineOpt,
   kPdfEngineOpts,
   kPreferHtml,
+  kQuartoFilters,
   kReferenceLocation,
   kRepoActionLinksEdit,
   kRepoActionLinksIssue,
@@ -185,6 +186,7 @@ import {
 
 import { TempContext } from "../core/temp-types.ts";
 import { HtmlPostProcessor } from "../command/render/types.ts";
+import { QuartoFilterSpec } from "../command/render/filters.ts";
 
 export const kDependencies = "dependencies";
 export const kSassBundles = "sass-bundles";
@@ -426,6 +428,7 @@ export interface FormatPandoc {
   [kCiteproc]?: boolean;
   [kCiteMethod]?: string;
   [kFilters]?: QuartoFilter[];
+  [kQuartoFilters]?: QuartoFilterSpec;
   [kPdfEngine]?: string;
   [kPdfEngineOpts]?: string[];
   [kPdfEngineOpt]?: string;

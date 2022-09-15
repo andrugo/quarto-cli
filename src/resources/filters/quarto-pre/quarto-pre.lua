@@ -26,6 +26,7 @@ function import(script)
   local path = PANDOC_SCRIPT_FILE:match("(.*[/\\])")
   dofile(path .. script)
 end
+import("../ast/make-extended-filters.lua")
 import("../common/colors.lua")
 import("../common/error.lua")
 import("../common/base64.lua")
@@ -49,6 +50,7 @@ import("../common/log.lua")
 import("../common/url.lua")
 import("../common/paths.lua")
 import("../common/timing.lua")
+import("../common/wrapped-filter.lua")
 import("results.lua")
 import("options.lua")
 import("code-filename.lua")
@@ -84,6 +86,7 @@ initShortcodeHandlers()
 
 local filterList = {
   { name = "init", filter = initOptions() },
+  { name = "quartoExtendedUserFilters", filter = makeExtendedUserFilters("beforeQuartoFilters") },
   { name = "bibliographyFormats", filter = bibliographyFormats() },
   { name = "shortCodesBlocks", filter = shortCodesBlocks() } ,
   { name = "shortCodesInlines", filter = shortCodesInlines() },

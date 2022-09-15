@@ -26,6 +26,7 @@ import("tikz.lua")
 import("meta.lua")
 import("delink.lua")
 import("book.lua")
+import("../ast/make-extended-filters.lua")
 import("../common/lunacolors.lua")
 import("../common/log.lua")
 import("../common/base64.lua")
@@ -37,6 +38,8 @@ import("../common/meta.lua")
 import("../common/debug.lua")
 import("../common/authors.lua")
 import("../common/string.lua")
+import("../common/wrapped-filter.lua")
+
 -- [/import]
 
 return {
@@ -53,6 +56,7 @@ return {
   }),
   ojs(),
   quartoPostMetaInject(),
+  makeExtendedUserFilters("afterQuartoFilters")
 }
 
 
