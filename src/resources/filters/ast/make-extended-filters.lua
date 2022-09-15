@@ -6,24 +6,7 @@
 runExtendedFilters = function(doc, filters)
   local result = doc
   for i, filter in ipairs(filters) do
-    if filter.Pandoc ~= nil then
-      local newPandoc = filter.Pandoc(result)
-      if newPandoc ~= nil then
-        result = newPandoc
-      end
-    end
-    if filter.Meta ~= nil then
-      local newMeta = filter.Meta(result.meta)
-      if newMeta ~= nil then
-        result.meta = newMeta
-      end
-    end
-
-    local blocks = {}
-    for _, block in pairs(result.blocks) do
-      table.insert(blocks, pandoc.walk_block(block, filter))
-    end
-    result = pandoc.Pandoc(blocks, result.meta)
+    result = result:walk(filter)
   end
   return result
 end
@@ -35,42 +18,46 @@ local function wrapExtendedAst(handlers)
     result[k] = v.handle
   end
 
-  if result.Div ~= nil then
-    local theirDivHandler = (result.Div or 
-      function(div) 
-        return div 
-      end)
-    result.Div = function(div)
-      -- try to find quarto extended AST tag
-      local astTag = div.attr["quarto-extended-ast-tag"]
-      if astTag ~= nil and result[astTag] ~= nil then
+  local theirDivHandler = (result.Div or 
+    function(div) 
+      return div 
+    end)
+
+  result.Div = function(div)
+    -- try to find quarto extended AST tag
+    local astTag = div.attr.attributes["quarto-extended-ast-tag"]
+    if astTag ~= nil and result[astTag] ~= nil then
         -- wrap to table
-        local extendedAstNode = {
-          attr = div.attr
-        }
-        for i, div in pairs(div.content) do
-          local name = pandoc.utils.stringify(div.content[1])
-          local value = div.content[2]
+      local extendedAstNode = {
+        attr = div.attr
+      }
+      local name
+      local value
+      for i, innerDiv in pairs(div.content) do
+        if i % 2 == 1 then
+          name = pandoc.utils.stringify(innerDiv.content)
+        else
+          value = innerDiv
+          extendedAstNode[name] = value
         end
-        extendedAstNode = result[astTag](extendedAstNode)
-        -- unwrap to div
-        local resultAttr
-        local blocks = {}
-        for name, value in pairs(extendedAstNode) do
-          if name == "attr" then
-            resultAttr = value
-          else
-            table.insert(blocks, Pandoc.Str(name))
-            table.insert(blocks, value)
-          end                    
-        end
-        return pandoc.Div(blocks, resultAttr)
-      else
-        return theirDivHandler(div)
       end
+      extendedAstNode = result[astTag](extendedAstNode) or extendedAstNode
+      -- unwrap to div
+      local resultAttr
+      local blocks = {}
+      for name, value in pairs(extendedAstNode) do
+        if name == "attr" then
+          resultAttr = value
+        else
+          table.insert(blocks, pandoc.Str(name))
+          table.insert(blocks, value)
+        end                    
+      end
+      return pandoc.Div(blocks, resultAttr)
+    else
+      return theirDivHandler(div)
     end
   end
-
   return result
 end
 

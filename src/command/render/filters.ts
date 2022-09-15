@@ -136,12 +136,6 @@ export function quartoFinalizeFilter() {
   return resourcePath("filters/quarto-finalize/quarto-finalize.lua");
 }
 
-export function quartoExtendAstFilter() {
-  return resourcePath(
-    "filters/ast/extend.lua",
-  );
-}
-
 export function quartoRetractAstFilter() {
   return resourcePath(
     "filters/ast/retract.lua",
@@ -583,9 +577,6 @@ export async function resolveFilters(
 
   // The initializer for Quarto
   quartoFilters.unshift(quartoInitFilter());
-
-  // Capture AST nodes and emit a nicer version of them ("extend the AST")
-  quartoFilters.unshift(quartoExtendAstFilter());
 
   // The finalizer for Quarto
   quartoFilters.push(quartoFinalizeFilter());

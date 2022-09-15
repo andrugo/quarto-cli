@@ -17,9 +17,9 @@ preState = {
   },
   file = nil,
   appendix = false,
-  fileSectionIds = {}
+  fileSectionIds = {},
+  extendedAstNodeHandlers = {}
 }
-
 
 -- [import]
 function import(script)
@@ -27,6 +27,8 @@ function import(script)
   dofile(path .. script)
 end
 import("../ast/make-extended-filters.lua")
+import("../ast/extended-nodes.lua")
+import("../ast/extend.lua")
 import("../common/colors.lua")
 import("../common/error.lua")
 import("../common/base64.lua")
@@ -86,6 +88,7 @@ initShortcodeHandlers()
 
 local filterList = {
   { name = "init", filter = initOptions() },
+  { name = "extend", filter = extend() },
   { name = "quartoExtendedUserFilters", filter = makeExtendedUserFilters("beforeQuartoFilters") },
   { name = "bibliographyFormats", filter = bibliographyFormats() },
   { name = "shortCodesBlocks", filter = shortCodesBlocks() } ,

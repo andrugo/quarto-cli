@@ -8,13 +8,17 @@ PANDOC_VERSION:must_be_at_least '2.13'
 text = require 'text'
 
 -- global state
-postState = {}
+postState = {
+  extendedAstNodeHandlers = {}
+}
 
 -- [import]
 function import(script)
   local path = PANDOC_SCRIPT_FILE:match("(.*[/\\])")
   dofile(path .. script)
 end
+import("../ast/make-extended-filters.lua")
+import("../ast/extended-nodes.lua")
 import("responsive.lua")
 import("latexdiv.lua")
 import("foldcode.lua")
@@ -26,7 +30,6 @@ import("tikz.lua")
 import("meta.lua")
 import("delink.lua")
 import("book.lua")
-import("../ast/make-extended-filters.lua")
 import("../common/lunacolors.lua")
 import("../common/log.lua")
 import("../common/base64.lua")
@@ -38,11 +41,13 @@ import("../common/meta.lua")
 import("../common/debug.lua")
 import("../common/authors.lua")
 import("../common/string.lua")
+import("../ast/retract.lua")
 import("../common/wrapped-filter.lua")
 
 -- [/import]
 
 return {
+  makeExtendedUserFilters("afterQuartoFilters"),
   foldCode(),
   combineFilters({
     latexDiv(),
@@ -56,7 +61,7 @@ return {
   }),
   ojs(),
   quartoPostMetaInject(),
-  makeExtendedUserFilters("afterQuartoFilters")
+  retract()
 }
 
 
