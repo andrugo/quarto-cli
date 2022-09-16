@@ -65,6 +65,7 @@ function makeWrappedFilter(scriptFile, filterHandler)
   if not err then
     local result = chunk()
     if result then
+      -- FIXME handle list of filters
       for k,v in pairs(result) do
         handlers[k] = {
           file = shortcodeFile,

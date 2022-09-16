@@ -1594,8 +1594,6 @@ function param(name, default)
   return value
 end
 
-
-
 -- Quarto internal module - makes functions available
 -- through the filters
 _quarto = {
@@ -1749,6 +1747,7 @@ quarto = {
   },
   utils = {
    dump = utils.dump,
+   table = utils.table,
    resolvePath = resolvePathExt
   },
   json = json,

@@ -30,6 +30,7 @@ import {
   kMergeIncludes,
   kOutputDivs,
   kPdfEngine,
+  kQuartoFilters,
   kReferenceLocation,
   kShortcodes,
   kTblColwidths,
@@ -57,8 +58,6 @@ import { mergeConfigs } from "../../core/config.ts";
 import { projectType } from "../../project/types/project-types.ts";
 import { readCodePage } from "../../core/windows.ts";
 import { authorsFilter, authorsFilterActive } from "./authors.ts";
-import { extensionIdString } from "../../extension/extension-shared.ts";
-import { warning } from "log/mod.ts";
 import { formatHasBootstrap } from "../../format/html/format-html-info.ts";
 import { activeProfiles, kQuartoProfile } from "../../quarto-core/profile.ts";
 import { filterExtensions } from "../../extension/extension.ts";
@@ -93,6 +92,11 @@ export async function filterParamsJson(
     )
     : {};
 
+  // extract the filter spec from pandoc options
+  const filterSpec = extractFilterSpecParams(
+    options.format.metadata,
+  );
+
   // Extract any column params
   const quartoColumnParams = extractColumnParams(
     args,
@@ -113,6 +117,7 @@ export async function filterParamsJson(
     ...filterParams,
     [kResultsFile]: pandocMetadataPath(resultsFile),
     [kTimingFile]: pandocMetadataPath(timingFile),
+    [kQuartoFilters]: filterSpec,
   };
   return JSON.stringify(params);
 }
@@ -137,10 +142,13 @@ export function quartoFinalizeFilter() {
   return resourcePath("filters/quarto-finalize/quarto-finalize.lua");
 }
 
-export function quartoRetractAstFilter() {
-  return resourcePath(
-    "filters/ast/retract.lua",
-  );
+function extractFilterSpecParams(
+  metadata: Metadata,
+) {
+  // pull out the filter spec that resolveFilters created
+  const filterSpec = metadata[kQuartoFilters];
+  delete metadata[kQuartoFilters];
+  return filterSpec;
 }
 
 function extractIncludeParams(
@@ -581,10 +589,6 @@ export async function resolveFilters(
 
   // The finalizer for Quarto
   quartoFilters.push(quartoFinalizeFilter());
-
-  // Fixme: this shouldn't run for custom writers
-  // Compile down ("retract") the extended AST
-  quartoFilters.push(quartoRetractAstFilter());
 
   // citeproc at the very end so all other filters can interact with citations
   filters = filters.filter((filter) => filter !== kQuartoCiteProcMarker);

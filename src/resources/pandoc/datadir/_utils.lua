@@ -150,6 +150,6 @@ return {
   table = {
     isarray = tisarray,
     contains = tcontains
-  }
+  },
 }
 

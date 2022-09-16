@@ -19,6 +19,7 @@ function import(script)
 end
 import("../ast/make-extended-filters.lua")
 import("../ast/extended-nodes.lua")
+import("../ast/render.lua")
 import("responsive.lua")
 import("latexdiv.lua")
 import("foldcode.lua")
@@ -41,13 +42,11 @@ import("../common/meta.lua")
 import("../common/debug.lua")
 import("../common/authors.lua")
 import("../common/string.lua")
-import("../ast/retract.lua")
 import("../common/wrapped-filter.lua")
 
 -- [/import]
 
 return {
-  makeExtendedUserFilters("afterQuartoFilters"),
   foldCode(),
   combineFilters({
     latexDiv(),
@@ -61,8 +60,6 @@ return {
   }),
   ojs(),
   quartoPostMetaInject(),
-  retract()
+  renderExtendedNodes(),
+  makeExtendedUserFilters("afterQuartoFilters"),
 }
-
-
-

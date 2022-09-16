@@ -2,75 +2,70 @@
 -- creates lua filter loaders to support extended AST
 -- Copyright (C) 2022 by RStudio, PBC
 
--- REVIEW this seems ugly but necessary?
 runExtendedFilters = function(doc, filters)
-  local result = doc
   for i, filter in ipairs(filters) do
-    result = result:walk(filter)
+    doc = doc:walk(filter)
   end
-  return result
+  return doc
 end
 
 local function wrapExtendedAst(handlers)
-  local result = {}
+  local wrappedFilter = {}
 
   for k,v in pairs(handlers) do
-    result[k] = v.handle
+    wrappedFilter[k] = v.handle
   end
 
-  local theirDivHandler = (result.Div or 
+  local theirDivHandler = (wrappedFilter.Div or 
     function(div) 
       return div 
     end)
 
-  result.Div = function(div)
+  wrappedFilter.Div = function(div)
+    local asPandocValue = function(filterResultItem)
+      if filterResultItem == nil or filterResultItem == pandoc.Null then
+        return filterResultItem
+      end
+
+      if quarto.utils.table.isarray(filterResultItem) then
+        -- this is an integer-indexed table, so we iterate over
+        -- the result and build it
+        local outputArray = {}
+        for i, v in pairs(filterResultItem) do
+          local innerResult = asPandocValue(v)
+          table.insert(outputArray, innerResult)
+        end
+        return outputArray
+      end
+
+      -- this is a string-indexed table, so it's a quarto
+      -- extended ast node. build the pandoc representation and
+      -- return it
+      return quarto.ast.build(filterResultItem)
+    end
+
     -- try to find quarto extended AST tag
     local astTag = div.attr.attributes["quarto-extended-ast-tag"]
-    if astTag ~= nil and result[astTag] ~= nil then
-        -- wrap to table
-      local extendedAstNode = {
-        attr = div.attr
-      }
-      local name
-      local value
-      for i, innerDiv in pairs(div.content) do
-        if i % 2 == 1 then
-          name = pandoc.utils.stringify(innerDiv.content)
-        else
-          value = innerDiv
-          extendedAstNode[name] = value
-        end
-      end
-      extendedAstNode = result[astTag](extendedAstNode) or extendedAstNode
-      -- unwrap to div
-      local resultAttr
-      local blocks = {}
-      for name, value in pairs(extendedAstNode) do
-        if name == "attr" then
-          resultAttr = value
-        else
-          table.insert(blocks, pandoc.Str(name))
-          table.insert(blocks, value)
-        end                    
-      end
-      return pandoc.Div(blocks, resultAttr)
+    local astHandler = quarto.ast.resolveHandler(astTag)
+    local filterHandler = astHandler and wrappedFilter[astHandler.astName]
+
+    if filterHandler ~= nil then
+      local nodeTable = quarto.ast.unbuild(div)
+      return asPandocValue(filterHandler(nodeTable))
     else
       return theirDivHandler(div)
     end
   end
-  return result
+  return wrappedFilter
 end
 
 makeExtendedUserFilters = function(filterListName)
   local filters = {}
+  for i, v in ipairs(param("quarto-filters")[filterListName]) do
+    local v = pandoc.utils.stringify(v)
+    table.insert(filters, makeWrappedFilter(v, wrapExtendedAst))
+  end
   local filter = {
-    Meta = function(meta)
-      for i, v in ipairs(meta["quarto-filters"][filterListName]) do
-        local v = pandoc.utils.stringify(v)
-        table.insert(filters, makeWrappedFilter(v, wrapExtendedAst))
-      end
-    end,
-    
     Pandoc = function(doc)
       return runExtendedFilters(doc, filters)
     end  
