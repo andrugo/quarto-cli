@@ -59,6 +59,7 @@ local function modify_lua_functions(all_compressed_mappings)
    local function decompress_mapping(compressed_mapping)
 
       local width, offset, base, CS1, CS2, get_next_char = 1.0, 0.0, 0.0, 7^18, 5^22, compressed_mapping:gmatch"%S"
+---@diagnostic disable-next-line: unbalanced-assignments
       local mapping, trees, unicode, ansi, prev_delta_unicode, prev_delta_ansi = {}, {}, 0x7F, 0x7F
 
       local function decompress_selection(qty, tree)
@@ -126,6 +127,7 @@ local function modify_lua_functions(all_compressed_mappings)
          local tree, qty_for_leaf_info = {total_freq, max_exp_cnt, 0.0}, 3 * max_exp_cnt
 
          local function build_subtree(left, right, idx)
+---@diagnostic disable-next-line: unbalanced-assignments
             local middle, subtree = left + 1
             middle = decompress_selection(right - middle) + middle
             tree[idx], idx = middle, idx + 3
@@ -1369,8 +1371,12 @@ end
 local function writeToDependencyFile(dependency)
   local dependencyJson = json.encode(dependency)
   local file = io.open(dependenciesFile(), "a")
-  file:write(dependencyJson .. "\n")
-  file:close()
+  if file ~= nil then
+     file:write(dependencyJson .. "\n")
+     file:close()
+  else
+     fail('Error opening dependencies file at ' .. dependenciesFile())
+  end
 end
 
 -- process a file dependency (read the contents of the file)
@@ -1379,18 +1385,24 @@ local function processFileDependency(dependency, meta)
    -- read file contents
    local rawFile = dependency.content
    local f = io.open(pandoc.utils.stringify(rawFile.path), "r")
-   local fileContents = f:read("*all")
-   f:close()
- 
-   -- Determine the format with special treatment for verbatim HTML
-   if format.isFormat("html") then
-     blockFormat = "html"
+   if f ~= nil then
+      local fileContents = f:read("*all")
+      f:close()
+
+      -- Determine the format with special treatment for verbatim HTML
+      if format.isFormat("html") then
+         blockFormat = "html"
+      else
+         blockFormat = FORMAT
+      end
+   
+      -- place the contents of the file right where it belongs
+      meta[rawFile.location]:insert(pandoc.Blocks({ pandoc.RawBlock(blockFormat, fileContents) }))
    else
-     blockFormat = FORMAT
-   end  
+      fail('Error reading dependencies from ' .. rawFile.path)
+   end
  
-   -- place the contents of the file right where it belongs
-   meta[rawFile.location]:insert(pandoc.Blocks({ pandoc.RawBlock(blockFormat, fileContents) }))
+   
  end
 
  -- process a text dependency, placing it in the specified location
@@ -1405,7 +1417,8 @@ local function processTextDependency(dependency, meta)
  end
 
  -- make the usePackage statement
-local function usePackage(package, option) 
+local function usePackage(package, option)
+   local text = ''
    if option == nil then
      text = "\\makeatletter\n\\@ifpackageloaded{" .. package .. "}{}{\\usepackage{" .. package .. "}}\n\\makeatother"
    else
@@ -1693,7 +1706,7 @@ quarto = {
          -- resolve a name, if one isn't provided
          local name = pathOrFileObj.name      
          if name == nil then
-            name = pandoc.path.filename(pathOrfileObj.path)
+            name = pandoc.path.filename(pathOrFileObj.path)
          end
 
          -- the full resolved file
