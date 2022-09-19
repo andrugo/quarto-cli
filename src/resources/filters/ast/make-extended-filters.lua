@@ -10,6 +10,8 @@ runExtendedFilters = function(doc, filters)
 end
 
 local function wrapExtendedAst(handlers)
+  -- TODO handle lists of filters
+  
   local wrappedFilter = {}
 
   for k,v in pairs(handlers) do

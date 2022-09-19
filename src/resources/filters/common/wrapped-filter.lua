@@ -76,7 +76,6 @@ function makeWrappedFilter(scriptFile, filterHandler)
   if not err then
     local result = chunk()
     if result then
-      -- FIXME handle list of filters
       if quarto.utils.table.isarray(result) then
         for i, handlerTable in pairs(result) do
           table.insert(handlers, makeSingleHandler(handlerTable))

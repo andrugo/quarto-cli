@@ -1,4 +1,8 @@
 function renderExtendedNodes() 
+  if string.find(FORMAT, ".lua$") then
+    return {}
+  end
+
   return {
     Div = function(div)
       local tag = pandoc.utils.stringify(div.attr.attributes[kExtendedAstTag])      
