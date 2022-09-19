@@ -73,6 +73,7 @@ import("panel-layout.lua")
 import("panel-sidebar.lua")
 import("panel-tabset.lua")
 import("profile.lua")
+import("project-paths.lua")
 import("resourcefiles.lua")
 import("results.lua")
 import("shortcodes-handlers.lua")
@@ -80,7 +81,8 @@ import("shortcodes.lua")
 import("table-captions.lua")
 import("table-colwidth.lua")
 import("table-rawhtml.lua")
-import("theorems.lua")-- [/import]
+import("theorems.lua")
+-- [/import]
 
 initShortcodeHandlers()
 
@@ -125,6 +127,7 @@ local filterList = {
   }) },
   { name = "quartoPreMetaInject", filter = quartoPreMetaInject() },
   { name = "writeResults", filter = writeResults() },
+  { name = "projectPaths", filter = projectPaths()}
 }
 
 return capture_timings(filterList)

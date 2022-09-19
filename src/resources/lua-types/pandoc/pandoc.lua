@@ -9,15 +9,6 @@ pandoc.readers = {}
 ---@type table<string,boolean>
 pandoc.writers = {}
 
----@class pandoc.Element : table
-pandoc.Element = {}
-
---[[
-Make a clone of an element
-]]
----@return pandoc.Element # Clone of the elment
-function pandoc.Element:clone() end
-
 --[[
 Pandoc document
 
@@ -27,14 +18,22 @@ equal in Lua if and only if they are equal in Haskell.
 ---@class pandoc.Pandoc
 ---@field blocks pandoc.List Document content 
 ---@field meta pandoc.Meta Meta information
+pandoc.Pandoc = {}
 
 --[[
 Create a complete pandoc document
 ]]
----@param blocks pandoc.List Document content 
+---@param blocks table|pandoc.List Document content 
 ---@param meta? pandoc.Meta Meta information
 ---@return pandoc.Pandoc
 function pandoc.Pandoc(blocks, meta) end
+
+--[[
+Make a clone
+]]
+---@return pandoc.Pandoc
+function pandoc.Pandoc:clone() end
+
 
 --[[
 Applies a Lua filter to the Pandoc element. Just as for
@@ -59,7 +58,7 @@ function pandoc.Pandoc.walk(lua_filter) end
 Runs command with arguments, passing it some input, and returns the output.
 ]]
 ---@param command string Program to run; the executable will be resolved using default system methods 
----@param args string[] List of arguments to pass to the program 
+---@param args table List of arguments to pass to the program 
 ---@param input string Data which is piped into the program via stdin 
 ---@return string # Output of command, i.e. data printed to stdout
 function pandoc.pipe(command, args, input) end
@@ -69,19 +68,21 @@ Apply a filter inside a block element, walking its contents.
 Returns a (deep) copy on which the filter has been applied:
 the original element is left untouched.
 ]]
----@param element pandoc.Element The block element
+---@generic T
+---@param element `T` The block element
 ---@param filter table A Lua filter (table of functions) to be applied within the block element
----@returm pandoc.Element The transformed block element
+---@return T The transformed block element
 function pandoc.walk_block(element, filter) end
 
 --[[
 -- Apply a filter inside an inline element, walking its contents.
--- Returns a (deep) copy on which the filter has been applied:
+-- Returns a (deep) copy on which the fislter has been applied:
 -- the original element is left untouched.
 ]]
----@param element pandoc.Element The inline element
+---@generic T
+---@param element `T` The inline element
 ---@param filter table A Lua filter (table of functions) to be applied within the inline element
----@returm pandoc.Element The transformed inline element
+---@return T The transformed inline element
 function pandoc.walk_inline(element, filter) end
 
 --[[
